@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>국민건강비서</title>
+    <style>
+        @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css");
+
+        body {
+            --vw: min(100vw, 730px);
+            --dpx: calc(var(--vw) / 375);
+            width: var(--vw);
+            height: 100vh;
+            margin: 0px auto;
+            padding: 0px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #D9D9D9;
+            font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .indicator {
+            position: fixed;
+            top: 0px;
+            left: 22px;
+        }
+
+        .poster__container {
+            width: var(--vw);
+            height: calc(var(--vw) * 16 / 9);
+            background-color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .poster__container--square {
+            height: var(--vw);
+        }
+
+        .poster__qna_q_container {
+            width: calc(335 * var(--dpx));
+            height: calc(60 * var(--dpx));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: calc(20 * var(--dpx));
+            padding: 0px;
+            border: #1D1D1D solid calc(2 * var(--dpx));
+            border-radius: 100px calc(12 * var(--dpx)) calc(12 * var(--dpx)) 100px;
+        }
+
+        .poster__qna_q_icon {
+            width: calc(52 * var(--dpx));
+            height: calc(52 * var(--dpx));
+            margin: calc(4 * var(--dpx));
+            background-color: #1D1D1D;
+            color: #FFFFFF;
+            font-size: calc(36 * var(--dpx));
+            font-weight: 800;
+            line-height: calc(52 * var(--dpx));
+            text-align: center;
+            vertical-align: middle;
+            border-radius: 100px;
+        }
+
+        .poster__qna_q {
+            width: calc(270 * var(--dpx));
+            /* height: calc(60 * var(--dpx)); */
+            margin: 0px 0px 0px 0px;
+            padding: 0px;
+            font-size: calc(20 * var(--dpx));
+            font-weight: 700;
+            color: #1D1D1D;
+            line-height: 120%;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .poster__qna_a {
+            width: calc(315 * var(--dpx));
+            margin: calc(18 * var(--dpx)) calc(30 * var(--dpx));
+            padding: 0px;
+            font-size: calc(18 * var(--dpx));
+            color: #000000;
+            line-height: 140%;
+            text-align: justify;
+        }
+
+        .poster__disclaimer {
+            /* position:
+            bottom: 0;
+            left: 0; */
+            width: 100%;
+            height: calc(27 * var(--dpx));
+            margin: 0px;
+            padding: 0px;
+            font-size: calc(12 * var(--dpx));
+            color: #666666;
+            text-align: center;
+            vertical-align: top;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="indicator">
+        <svg width="177" height="39" viewBox="0 0 177 39" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+                d="M54.1943 33.5469H52.3486V17.6738H54.1943V33.5469ZM52.8057 25.4697H49.9844V23.8965H52.8057V25.4697ZM50.5469 32.7646H48.7627V17.9727H50.5469V32.7646ZM42.1006 28.2031C43.3018 28.2031 44.3242 28.1768 45.168 28.124C46.0117 28.0713 46.873 27.9629 47.752 27.7988L47.9014 29.3984C47.0049 29.5684 46.123 29.6855 45.2559 29.75C44.3945 29.8086 43.3428 29.8408 42.1006 29.8467H41.0195V28.2031H42.1006ZM46.9521 21.1367H42.9795V28.9941H41.0195V19.5547H46.9521V21.1367ZM61.9199 29.6797H59.96V27.0869H61.9199V29.6797ZM68.6523 33.5469H66.6836V17.6738H68.6523V33.5469ZM70.8848 25.8564H68.002V24.2393H70.8848V25.8564ZM55.8994 29.1523C57.8506 29.1582 59.6348 29.1318 61.252 29.0732C62.8691 29.0146 64.3984 28.8857 65.8398 28.6865L65.9717 30.1279C64.917 30.3154 63.8213 30.4561 62.6846 30.5498C61.5537 30.6377 60.4873 30.6963 59.4854 30.7256C58.4834 30.7549 57.3789 30.7695 56.1719 30.7695L55.8994 29.1523ZM65.6553 21.0488H56.1895V19.502H65.6553V21.0488ZM60.9619 21.7783C61.7061 21.7783 62.3682 21.9043 62.9482 22.1562C63.5342 22.4023 63.9912 22.751 64.3193 23.2021C64.6475 23.6475 64.8115 24.1631 64.8115 24.749C64.8115 25.3291 64.6475 25.8418 64.3193 26.2871C63.9912 26.7324 63.5342 27.0811 62.9482 27.333C62.3682 27.5791 61.7061 27.7021 60.9619 27.7021C60.2061 27.7021 59.5352 27.5791 58.9492 27.333C58.3633 27.0811 57.9092 26.7354 57.5869 26.2959C57.2646 25.8506 57.1035 25.335 57.1035 24.749C57.1035 24.1631 57.2646 23.6475 57.5869 23.2021C57.9092 22.751 58.3633 22.4023 58.9492 22.1562C59.5352 21.9043 60.2061 21.7783 60.9619 21.7783ZM60.9619 23.2725C60.5635 23.2725 60.2119 23.3311 59.9072 23.4482C59.6025 23.5654 59.3652 23.7354 59.1953 23.958C59.0312 24.1807 58.9492 24.4443 58.9492 24.749C58.9492 25.0479 59.0312 25.3086 59.1953 25.5312C59.3594 25.7539 59.5938 25.9209 59.8984 26.0322C60.209 26.1436 60.5635 26.1992 60.9619 26.1992C61.3545 26.1992 61.7002 26.1436 61.999 26.0322C62.3037 25.9209 62.5381 25.7539 62.7021 25.5312C62.8662 25.3086 62.9482 25.0479 62.9482 24.749C62.9482 24.4443 62.8662 24.1807 62.7021 23.958C62.5381 23.7354 62.3037 23.5654 61.999 23.4482C61.7002 23.3311 61.3545 23.2725 60.9619 23.2725ZM61.9199 20.6094H59.96V17.7441H61.9199V20.6094ZM86.1689 31.7188H71.6494V30.1104H86.1689V31.7188ZM79.832 30.7959H77.9072V26.9727H79.832V30.7959ZM84.4375 23.8613H75.3145V26.7441H73.3633V22.3232H82.5127V20.3369H73.3369V18.7549H84.4375V23.8613ZM84.8154 27.5088H73.3633V25.918H84.8154V27.5088ZM99.6953 25.2588H97.7441V22.2881H99.6953V25.2588ZM104.257 23.0879H93.332V21.5498H104.257V23.0879ZM104.125 19.8096H95.292V22.3936H93.332V18.2363H104.125V19.8096ZM105.962 25.8477H91.4951V24.292H105.962V25.8477ZM104.169 30.7432H95.1338V32.3604H93.2002V29.3633H102.235V28.3174H93.1914V26.8672H104.169V30.7432ZM104.6 33.415H93.2002V31.9121H104.6V33.415ZM111.314 18.834C112.111 18.834 112.82 19.0654 113.441 19.5283C114.062 19.9854 114.552 20.6387 114.909 21.4883C115.267 22.332 115.445 23.3164 115.445 24.4414C115.445 25.5723 115.267 26.5625 114.909 27.4121C114.552 28.2559 114.06 28.9092 113.433 29.3721C112.812 29.835 112.105 30.0664 111.314 30.0664C110.518 30.0664 109.806 29.835 109.179 29.3721C108.552 28.9092 108.062 28.2559 107.711 27.4121C107.359 26.5625 107.184 25.5723 107.184 24.4414C107.184 23.3164 107.359 22.332 107.711 21.4883C108.062 20.6387 108.552 19.9854 109.179 19.5283C109.806 19.0654 110.518 18.834 111.314 18.834ZM111.314 20.5918C110.869 20.5859 110.474 20.7383 110.128 21.0488C109.788 21.3594 109.524 21.8047 109.337 22.3848C109.155 22.959 109.064 23.6445 109.064 24.4414C109.064 25.2383 109.155 25.9297 109.337 26.5156C109.524 27.0957 109.791 27.5381 110.137 27.8428C110.482 28.1416 110.875 28.291 111.314 28.291C111.76 28.291 112.152 28.1416 112.492 27.8428C112.838 27.5381 113.102 27.0957 113.283 26.5156C113.465 25.9297 113.556 25.2383 113.556 24.4414C113.556 23.6387 113.465 22.9502 113.283 22.376C113.102 21.7959 112.838 21.3535 112.492 21.0488C112.152 20.7383 111.76 20.5859 111.314 20.5918ZM119.488 33.5469H117.537V17.6738H119.488V33.5469ZM121.94 25.4258H119.049V23.7822H121.94V25.4258ZM135.045 33.5381H133.094V17.6738H135.045V33.5381ZM137.4 25.5049H134.544V23.8877H137.4V25.5049ZM130.853 19.335C130.853 20.9521 130.609 22.458 130.123 23.8525C129.643 25.2412 128.866 26.5186 127.794 27.6846C126.722 28.8447 125.333 29.8496 123.628 30.6992L122.529 29.1875C123.965 28.4609 125.154 27.6318 126.098 26.7002C127.047 25.7686 127.756 24.7227 128.225 23.5625C128.693 22.3965 128.928 21.1016 128.928 19.6777V19.335H130.853ZM129.921 20.9434H123.355V19.335H129.921V20.9434ZM151.428 33.5469H149.45V17.6738H151.428V33.5469ZM146.69 19.3613C146.69 21.0195 146.45 22.54 145.97 23.9229C145.495 25.2998 144.713 26.5684 143.623 27.7285C142.533 28.8828 141.089 29.8877 139.29 30.7432L138.253 29.1787C139.782 28.4521 141.024 27.626 141.979 26.7002C142.935 25.7744 143.635 24.7344 144.08 23.5801C144.525 22.4258 144.748 21.1309 144.748 19.6953V19.3613H146.69ZM145.627 20.9082H139.062V19.3613H145.627V20.9082Z"
+                fill="black" />
+            <path d="M4 2C8.5 26 24 26 34.5 26M4 2L1 11.5M4 2L11.5 9.5" stroke="black" stroke-width="2"
+                stroke-linecap="round" />
+        </svg>
+    </div>
+    <div class="poster__container poster__container--square">
+        <div class="poster__qna">
+            <div class="poster__qna_q_container">
+                <div class="poster__qna_q_icon">Q</div>
+                <div class="poster__qna_q" id="poster__qna_q"></div>
+            </div>
+            <p class="poster__qna_a" id="poster__qna_a"></p>
+        </div>
+        <p class="poster__disclaimer">위 내용은 국가건강정보포털의 자료를 바탕으로 작성되었습니다</p>
+    </div>
+
+    <script>
+        const getUrlParams = () => {
+            const params = {};
+            const queryString = window.location.search.substring(1);
+            const regex = /([^&=]+)=([^&]*)/g;
+            let match;
+            while (match = regex.exec(queryString)) {
+                params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+            }
+            return params;
+        };
+
+        const urlParams = getUrlParams();
+        console.log(urlParams);
+
+        if (urlParams.type === 'qna__square_single') {
+            const Q = urlParams.q;
+            const A = urlParams.a;
+            document.getElementById('poster__qna_q').innerText = Q;
+            document.getElementById('poster__qna_a').innerText = A;
+        }
+    </script>
+</body>
+
+</html>

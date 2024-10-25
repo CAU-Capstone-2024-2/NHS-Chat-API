@@ -14,17 +14,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
+const uuid_1 = require("uuid");
+const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
 const port = 3000;
 ;
 let sessions = {};
+let liveUsers = {};
 app.use(body_parser_1.default.json());
 app.get('/test', (req, res) => {
     res.send('Hello World!');
 });
 app.post('/repeater', (req, res) => {
-    // const { userRequest } = req.body;
-    // const userMessage = userRequest.utterance;
     res.json({
         version: "2.0",
         template: {
@@ -36,11 +37,23 @@ app.post('/repeater', (req, res) => {
         },
     });
 });
-let i = 0;
 app.post('/kakao/callback-request', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const URL = req.body.userRequest.callbackUrl;
     const UID = req.body.userRequest.user.id;
     const Utterance = req.body.userRequest.utterance;
+    if (liveUsers[UID]) {
+        res.json({
+            version: "2.0",
+            template: {
+                outputs: [{
+                        simpleText: {
+                            text: '이전 요청을 분석중입니다.',
+                        },
+                    }],
+            },
+        });
+        return;
+    }
     res.json({
         version: "2.0",
         useCallback: true,
@@ -48,21 +61,21 @@ app.post('/kakao/callback-request', (req, res) => __awaiter(void 0, void 0, void
             text: `[${UID}]의 요청을 분석중입니다.`,
         },
     });
-    const SessionId = `2be97eb6-e813-4f0f-9eb0-c66df18522fc-${i++}`;
+    const SessionId = (0, uuid_1.v4)();
     const CurrentSession = {
+        // sessionId: SessionId,
         callbackUrl: URL,
         uid: UID,
     };
+    liveUsers[UID] = true;
     sessions[SessionId] = CurrentSession;
-    // console.log(sessions);
-    console.log(`/kakao/callback-request => utterance: ${Utterance}`);
+    console.log(`${SessionId} | kakao/callback-request | utterance: ${Utterance}`);
     const ModelQuery = {
         sessionId: SessionId,
         uid: UID,
         question: Utterance,
     };
-    // const ModelURL = 'http://3.37.186.94:1500/api/ask';
-    const ModelURL = 'http://218.239.229.119:1500/api/ask';
+    const ModelURL = 'http://100.99.151.44:1500/api/ask';
     const ModelQueryResponse = yield fetch(ModelURL, {
         method: "POST",
         headers: {
@@ -70,18 +83,22 @@ app.post('/kakao/callback-request', (req, res) => __awaiter(void 0, void 0, void
         },
         body: JSON.stringify(ModelQuery),
     }).then((res) => res.json()).then((data) => {
-        console.log(`/kakao/callback-request => query response: ${data}`);
+        console.log(`${SessionId} | kakao/callback-request | query response: ${data.message}`);
         return data.message;
     }).catch((e) => {
         console.error(e);
+        delete liveUsers[UID];
+        delete sessions[SessionId];
         return '[ERROR]';
     });
 }));
+// requires sessionId, answer
 app.post('/kakao/callback-response/simple-text', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const SessionId = req.body.sessionId;
     const Answer = req.body.answer;
     const URL = sessions[SessionId].callbackUrl;
-    console.log(`/kakao/callback-response/simple-text => answer: ${Answer}`);
+    console.log(`${SessionId} | kakao/callback-response/simple-text | answer: ${Answer}`);
+    delete liveUsers[sessions[SessionId].uid];
     delete sessions[SessionId];
     const callbackResponse = {
         version: "2.0",
@@ -100,10 +117,20 @@ app.post('/kakao/callback-response/simple-text', (req, res) => __awaiter(void 0,
         },
         body: JSON.stringify(callbackResponse),
     }).then((res) => res.json()).then((data) => {
-        console.log(`/kakao/callback-response/simple-text => callback: ${data.status}`);
+        console.log(`${SessionId} | kakao/callback-response/simple-text | kakao response: ${data.status}`);
     });
-    res.status(200).json({ message: 'seccess' });
+    res.status(200).json({ message: 'success' });
 }));
+// requires sessionId, posterType, posterContent
+app.post('/kakao/callback-response/poster', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const SessionId = req.body.sessionId;
+    const PosterType = 'qna/square-single';
+    // const Answer: string = req.body.answer;
+    const URL = sessions[SessionId].callbackUrl;
+}));
+app.get('/poster*', (req, res) => {
+    res.sendFile('poster.html', { root: path_1.default.join(__dirname, '../public') });
+});
 app.listen(port, () => {
     console.log(`KakaoTalk chatbot server is running on port ${port}`);
 });
