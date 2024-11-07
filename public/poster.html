@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
+    <meta name="theme-color" content="#D9D9D9" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>국민건강비서</title>
@@ -13,16 +14,17 @@
             --vw: min(100vw, 730px);
             --dpx: calc(var(--vw) / 375);
             width: var(--vw);
-            height: 100vh;
+            height: 100dvh;
             margin: 0px auto;
             padding: 0px;
             display: flex;
-            justify-content: center;
+            /* justify-content: center; */
             align-items: center;
             background-color: #D9D9D9;
             font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
             touch-action: none;
             user-select: none;
+            overflow: hidden;
         }
 
         .indicator {
@@ -63,7 +65,7 @@
             background-color: #1D1D1D;
             color: #FFFFFF;
             font-size: calc(36 * var(--dpx));
-            font-weight: 800;
+            font-weight: 700;
             line-height: calc(52 * var(--dpx));
             text-align: center;
             vertical-align: middle;
@@ -76,7 +78,7 @@
             margin: 0px 0px 0px 0px;
             padding: 0px;
             font-size: calc(20 * var(--dpx));
-            font-weight: 700;
+            font-weight: 600;
             color: #1D1D1D;
             line-height: 120%;
             text-align: left;
@@ -106,6 +108,29 @@
             text-align: center;
             vertical-align: top;
         }
+
+        .button__container {
+            position: fixed;
+            bottom: calc(9px + env(safe-area-inset-bottom));
+            width: var(--vw);
+            height: 49px;
+            padding: 0px 12px;
+            display: flex;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .button--save {
+            width: 100%;
+            height: 49px;
+            background-color: #0071E3;
+            color: #FFFFFF;
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 49px;
+            text-align: center;
+            border-radius: 8px;
+        }
     </style>
 </head>
 
@@ -119,7 +144,7 @@
                 stroke-linecap="round" />
         </svg>
     </div>
-    <div class="poster__container poster__container--square">
+    <div id="poster" class="poster__container poster__container--square">
         <div class="poster__qna">
             <div class="poster__qna_q_container">
                 <div class="poster__qna_q_icon">Q</div>
@@ -129,7 +154,12 @@
         </div>
         <p class="poster__disclaimer">위 내용은 국가건강정보포털의 자료를 바탕으로 작성되었습니다</p>
     </div>
+    <div class="button__container">
+        <div class="button--save" onclick="saveAsImage();">사진으로 저장하기</div>
+    </div>
 
+
+    <script src="https://unpkg.com/dom-to-image-more@3.5.0/dist/dom-to-image-more.min.js"></script>
     <script>
         const getUrlParams = () => {
             const params = {};
@@ -151,6 +181,28 @@
             document.getElementById('poster__qna_q').innerText = Q;
             document.getElementById('poster__qna_a').innerText = A;
         }
+
+        if (window.navigator.userAgent.includes('KAKAOTALK')) {
+
+        } else {
+            document.querySelector('.indicator').style.display = 'none';
+        }
+
+        const saveAsImage = () => {
+            domtoimage.toJpeg(poster, {
+                width: poster.clientWidth * 4,
+                height: poster.clientHeight * 4,
+                style: {
+                    transform: "scale(4)",
+                    transformOrigin: "top left"
+                }
+            }).then((dataUrl) => {
+                var link = document.createElement('a');
+                link.download = '국민건강비서_포스터.jpeg';
+                link.href = dataUrl;
+                link.click();
+            });
+        };
     </script>
 </body>
 
