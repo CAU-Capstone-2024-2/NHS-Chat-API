@@ -18,33 +18,46 @@ interface SessionStorage {
 let sessions: SessionStorage = {};
 let liveUsers: { [uid: string]: number } = {};
 
+const safeJSONParser = (x: string) => {
+    x = x.replaceAll("\'", "\"");
+    return JSON.parse(x);
+}
+
 
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, '../public'), {
+    extensions: ['html'],
+}));
 
-app.get('/', (req, res) => {
-    res.send('ACTIVE');
-    return;
-});
+// app.get('/', (req, res) => {
+//     res.send('ACTIVE');
+//     return;
+// });
+app.use(express.static('public'));
 app.get('/force-refresh', (req, res) => {
     sessions = {};
     liveUsers = {};
     res.send('ACTIVE');
     return;
 });
+// app.get('/poster', (req, res) => {
+//     res.sendFile('poster.html', { root: path.join(__dirname, '../public') });
+//     return;
+// });
 
-app.post('/repeater', (req, res) => {
-    res.json({
-        version: "2.0",
-        template: {
-            outputs: [{
-                simpleText: {
-                    text: req.body.userRequest.utterance,
-                },
-            }],
-        },
-    });
-    return;
-});
+// app.post('/repeater', (req, res) => {
+//     res.json({
+//         version: "2.0",
+//         template: {
+//             outputs: [{
+//                 simpleText: {
+//                     text: req.body.userRequest.utterance,
+//                 },
+//             }],
+//         },
+//     });
+//     return;
+// });
 
 app.post('/kakao/callback-request', async (req, res) => {
     const URL: string = req.body.userRequest.callbackUrl;
@@ -68,14 +81,12 @@ app.post('/kakao/callback-request', async (req, res) => {
     res.json({
         version: "2.0",
         useCallback: true,
-        data: {
-            // text: `[${UID}]의 요청을 분석중입니다.`,
-            text: `내용을 검색중이에요. 잠시만 기다려 주세요!`,
-        },
+        // data: {
+        //     text: '잠시만 기다려 주세요',
+        // },
     });
 
-
-    const SessionId: string = v4();
+    const SessionId: string = ('session' in clientExtra) ? clientExtra.session : v4();
     const CurrentSession: Session = {
         // sessionId: SessionId,
         callbackUrl: URL,
@@ -90,9 +101,9 @@ app.post('/kakao/callback-request', async (req, res) => {
     const ModelQuery = {
         sessionId: SessionId,
         uid: UID,
-        question: Utterance,
-        is_from_list: 'is_from_list' in clientExtra && clientExtra.is_from_list,
-        q_not_found: 'q_not_found' in clientExtra && clientExtra.q_not_found,
+        question: ('q' in clientExtra) ? clientExtra.q : Utterance,
+        is_from_list: 'session' in clientExtra,
+        q_not_found: false,
     };
 
     await fetch(ModelURL, {
@@ -123,6 +134,9 @@ app.post('/kakao/callback-request', async (req, res) => {
 app.post('/kakao/callback-response/simple-text', async (req, res) => {
     const SessionId: string = req.body.sessionId;
     const Answer: string = req.body.answer;
+    if (!(SessionId in sessions)) {
+        return;
+    }
     const URL: string = sessions[SessionId].callbackUrl;
 
     console.log(`${SessionId} | kakao/callback-response/simple-text | answer: ${Answer}`);
@@ -157,7 +171,10 @@ app.post('/kakao/callback-response/simple-text', async (req, res) => {
 // requires sessionId, answer list
 app.post('/kakao/callback-response/list-card', async (req, res) => {
     const SessionId: string = req.body.sessionId;
-    const Answer: string[] = JSON.parse(req.body.question.replaceAll("\'", "\""));
+    const Answer: string[] = safeJSONParser(req.body.question);
+    if (!(SessionId in sessions)) {
+        return;
+    }
     const URL: string = sessions[SessionId].callbackUrl;
 
     console.log(`${SessionId} | kakao/callback-response/list-card | answer: ${Answer}`);
@@ -170,21 +187,21 @@ app.post('/kakao/callback-response/list-card', async (req, res) => {
             "action": "message",
             "messageText": v,
             "extra": {
-                "is_from_list": true,
-                "q_not_found": false
+                "q": v,
+                "session": SessionId
             }
         };
     });
-    listItems.push({
-        "title": "찾는 내용이 없어요",
-        "description": "이전 질문에 대한 답변을 받을래요",
-        "action": "message",
-        "messageText": "찾는 내용이 없어요",
-        "extra": {
-            "is_from_list": true,
-            "q_not_found": true
-        }
-    });
+    // listItems.push({
+    //     "title": "찾는 내용이 없어요",
+    //     "description": "이전 질문에 대한 답변을 받을래요",
+    //     "action": "message",
+    //     "messageText": "찾는 내용이 없어요",
+    //     "extra": {
+    //         "q": "찾는 내용이 없어요",
+    //         "session": SessionId
+    //     }
+    // });
     const callbackResponse = {
         "version": "2.0",
         "template": {
@@ -194,7 +211,18 @@ app.post('/kakao/callback-response/list-card', async (req, res) => {
                         "header": {
                             "title": "아래 질문지 중 하나를 선택해주세요"
                         },
-                        "items": listItems
+                        "items": listItems,
+                        "buttons": [
+                            {
+                                "label": "찾는 내용이 없어요",
+                                "action": "message",
+                                "messageText": "찾는 내용이 없어요",
+                                "extra": {
+                                    "q": "찾는 내용이 없어요",
+                                    "session": SessionId
+                                }
+                            }
+                        ]
                     }
                 }
             ]
@@ -218,39 +246,28 @@ app.post('/kakao/callback-response/list-card', async (req, res) => {
 // requires sessionId, posterType, posterContent
 app.post('/kakao/callback-response/poster', async (req, res) => {
     const SessionId: string = req.body.sessionId;
+    if (!(SessionId in sessions)) {
+        return;
+    }
     const URL: string = sessions[SessionId].callbackUrl;
 
     delete liveUsers[sessions[SessionId].uid];
     delete sessions[SessionId];
 
 
-    const Answer = JSON.parse(req.body.answer);
+    const Answer = safeJSONParser(req.body.answer);
     const PosterType: string = Answer.template_type || 'qna__square_single';
     const Q: string = Answer.content.question;
     const A: string = Answer.content.answer;
+    const metadata: string = `type=${PosterType}&q=${encodeURI(Q)}&a=${encodeURI(A)}`;
 
-    const PosterURL: string = `https://nhs.rocknroll17.com/poster?type=${PosterType}&q=${encodeURI(Q)}&a=${encodeURI(A)}`;
+    const PosterURL: string = `https://nhs.rocknroll17.com/poster?c=${btoa(metadata)}`;
     console.log(`${SessionId} | kakao/callback-response/poster | type: ${PosterType}`);
     console.log(`${SessionId} | kakao/callback-response/poster |    Q: ${Q}`);
     console.log(`${SessionId} | kakao/callback-response/poster |    A: ${A}`);
 
 
     let callbackResponse = {};
-    // if (PosterType === 'qna__square_single') {
-    //     callbackResponse = {
-    //         "version": "2.0",
-    //         "template": {
-    //             "outputs": [
-    //                 {
-    //                     "simpleImage": {
-    //                         "imageUrl": "https://t1.kakaocdn.net/openbuilder/sample/lj3JUcmrzC53YIjNDkqbWK.jpg",
-    //                         "altText": A,
-    //                     }
-    //                 }
-    //             ]
-    //         }
-    //     };
-    // }
     callbackResponse = {
         "version": "2.0",
         "template": {
@@ -283,11 +300,6 @@ app.post('/kakao/callback-response/poster', async (req, res) => {
     });
 
     res.status(200).json({ message: 'success' });
-    return;
-});
-
-app.get('/poster', (req, res) => {
-    res.sendFile('poster.html', { root: path.join(__dirname, '../public') });
     return;
 });
 

@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="theme-color" content="#D9D9D9" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1" />
 
     <title>국민건강비서</title>
     <style>
@@ -22,8 +22,9 @@
             align-items: center;
             background-color: #D9D9D9;
             font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
-            touch-action: none;
-            user-select: none;
+            touch-action: pinch-zoom;
+            pointer-events: none;
+            user-select: none !important;
             overflow: hidden;
         }
 
@@ -161,9 +162,9 @@
 
     <script src="https://unpkg.com/dom-to-image-more@3.5.0/dist/dom-to-image-more.min.js"></script>
     <script>
-        const getUrlParams = () => {
+        const getUrlParams = (s) => {
             const params = {};
-            const queryString = window.location.search.substring(1);
+            const queryString = s ? s : window.location.search.substring(1);
             const regex = /([^&=]+)=([^&]*)/g;
             let match;
             while (match = regex.exec(queryString)) {
@@ -172,12 +173,12 @@
             return params;
         };
 
-        const urlParams = getUrlParams();
+        const urlParams = getUrlParams(atob(getUrlParams().c));
         console.log(urlParams);
 
         if (urlParams.type === 'qna__square_single') {
-            const Q = urlParams.q;
-            const A = urlParams.a;
+            const Q = (urlParams.q);
+            const A = (urlParams.a);
             document.getElementById('poster__qna_q').innerText = Q;
             document.getElementById('poster__qna_a').innerText = A;
         }
