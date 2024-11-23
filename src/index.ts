@@ -2,6 +2,9 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { v4 } from 'uuid';
 import path from 'path';
+import generatePosterImage from './poster-generator'
+// import nodeHtmlToImage from 'node-html-to-image';
+// import puppeteer from 'puppeteer';
 
 const app = express();
 const port = 5000;
@@ -19,7 +22,8 @@ let sessions: SessionStorage = {};
 let liveUsers: { [uid: string]: number } = {};
 
 const safeJSONParser = (x: string) => {
-    x = x.replaceAll("\'", "\"");
+    x = x.replace(/(^|[^/])'/g, '$1"');
+    x = x.replaceAll("/'", "'");
     return JSON.parse(x);
 }
 
@@ -29,10 +33,6 @@ app.use(express.static(path.join(__dirname, '../public'), {
     extensions: ['html'],
 }));
 
-// app.get('/', (req, res) => {
-//     res.send('ACTIVE');
-//     return;
-// });
 app.use(express.static('public'));
 app.get('/force-refresh', (req, res) => {
     sessions = {};
@@ -40,25 +40,8 @@ app.get('/force-refresh', (req, res) => {
     res.send('ACTIVE');
     return;
 });
-// app.get('/poster', (req, res) => {
-//     res.sendFile('poster.html', { root: path.join(__dirname, '../public') });
-//     return;
-// });
 
-// app.post('/repeater', (req, res) => {
-//     res.json({
-//         version: "2.0",
-//         template: {
-//             outputs: [{
-//                 simpleText: {
-//                     text: req.body.userRequest.utterance,
-//                 },
-//             }],
-//         },
-//     });
-//     return;
-// });
-
+/* Receiving Messages (chat -> AI) */
 app.post('/kakao/callback-request', async (req, res) => {
     const URL: string = req.body.userRequest.callbackUrl;
     const UID: string = req.body.userRequest.user.id;
@@ -71,7 +54,7 @@ app.post('/kakao/callback-request', async (req, res) => {
             template: {
                 outputs: [{
                     simpleText: {
-                        text: '이전 요청을 분석중입니다.',
+                        text: '이전 요청을 분석중이에요',
                     },
                 }],
             },
@@ -81,9 +64,9 @@ app.post('/kakao/callback-request', async (req, res) => {
     res.json({
         version: "2.0",
         useCallback: true,
-        // data: {
-        //     text: '잠시만 기다려 주세요',
-        // },
+        data: {
+            text: ('q' in clientExtra) ? '이전 질문에 대한 답변을 보내드릴게요' : ('session' in clientExtra) ? '답변을 생성중이에요' : '',
+        },
     });
 
     const SessionId: string = ('session' in clientExtra) ? clientExtra.session : v4();
@@ -95,7 +78,7 @@ app.post('/kakao/callback-request', async (req, res) => {
     liveUsers[UID] = new Date().getTime();
     sessions[SessionId] = CurrentSession;
     console.log(`${SessionId} | kakao/callback-request | timestamp: ${liveUsers[UID]}`);
-    console.log(`${SessionId} | kakao/callback-request | utterance: ${Utterance}`);
+    console.log(`${SessionId} | kakao/callback-request | utterance: ${Utterance}${('q' in clientExtra) ? ` (${clientExtra.q})` : ''}`);
 
     const ModelURL = 'http://100.99.151.44:1500/api/ask';
     const ModelQuery = {
@@ -129,9 +112,15 @@ app.post('/kakao/callback-request', async (req, res) => {
     res.end();
     return;
 });
+// app.post('/kakao/callback-request/init', async (req, res) => {
 
-// requires sessionId, answer
+// });
+
+
+/* Sending Message (AI -> chat) */
 app.post('/kakao/callback-response/simple-text', async (req, res) => {
+    // sessionId: string
+    // answer: string
     const SessionId: string = req.body.sessionId;
     const Answer: string = req.body.answer;
     if (!(SessionId in sessions)) {
@@ -167,11 +156,13 @@ app.post('/kakao/callback-response/simple-text', async (req, res) => {
     res.status(200).json({ message: 'success' });
     return;
 });
-
-// requires sessionId, answer list
 app.post('/kakao/callback-response/list-card', async (req, res) => {
+    // sessionId: string
+    // originalQuestion: string
+    // question: string[]
     const SessionId: string = req.body.sessionId;
-    const Answer: string[] = safeJSONParser(req.body.question);
+    const originalQuestion: string = req.body.originalQuestion;
+    const Answer: string[] = safeJSONParser(req.body.question.replaceAll("\"", "\\\""));
     if (!(SessionId in sessions)) {
         return;
     }
@@ -187,21 +178,10 @@ app.post('/kakao/callback-response/list-card', async (req, res) => {
             "action": "message",
             "messageText": v,
             "extra": {
-                "q": v,
                 "session": SessionId
             }
         };
     });
-    // listItems.push({
-    //     "title": "찾는 내용이 없어요",
-    //     "description": "이전 질문에 대한 답변을 받을래요",
-    //     "action": "message",
-    //     "messageText": "찾는 내용이 없어요",
-    //     "extra": {
-    //         "q": "찾는 내용이 없어요",
-    //         "session": SessionId
-    //     }
-    // });
     const callbackResponse = {
         "version": "2.0",
         "template": {
@@ -218,7 +198,7 @@ app.post('/kakao/callback-response/list-card', async (req, res) => {
                                 "action": "message",
                                 "messageText": "찾는 내용이 없어요",
                                 "extra": {
-                                    "q": "찾는 내용이 없어요",
+                                    "q": originalQuestion,
                                     "session": SessionId
                                 }
                             }
@@ -242,9 +222,15 @@ app.post('/kakao/callback-response/list-card', async (req, res) => {
     res.status(200).json({ message: 'success' });
     return;
 });
-
-// requires sessionId, posterType, posterContent
 app.post('/kakao/callback-response/poster', async (req, res) => {
+    // sessionId: string
+    // answer: {
+    //     template_type: string
+    //     content: {
+    //         question: string
+    //         answer: string
+    //     }
+    // }
     const SessionId: string = req.body.sessionId;
     if (!(SessionId in sessions)) {
         return;
@@ -254,39 +240,52 @@ app.post('/kakao/callback-response/poster', async (req, res) => {
     delete liveUsers[sessions[SessionId].uid];
     delete sessions[SessionId];
 
-
+    // console.log(req.body.answer)
     const Answer = safeJSONParser(req.body.answer);
     const PosterType: string = Answer.template_type || 'qna__square_single';
     const Q: string = Answer.content.question;
     const A: string = Answer.content.answer;
     const metadata: string = `type=${PosterType}&q=${encodeURI(Q)}&a=${encodeURI(A)}`;
+    // console.log(Answer.content)
 
+    // const PosterURL: string = `https://nhs.rocknroll17.com/render/poster?c=${btoa(metadata)}`;
     const PosterURL: string = `https://nhs.rocknroll17.com/poster?c=${btoa(metadata)}`;
     console.log(`${SessionId} | kakao/callback-response/poster | type: ${PosterType}`);
     console.log(`${SessionId} | kakao/callback-response/poster |    Q: ${Q}`);
     console.log(`${SessionId} | kakao/callback-response/poster |    A: ${A}`);
 
-
-    let callbackResponse = {};
-    callbackResponse = {
+    // const callbackResponse = {
+    //     version: '2.0',
+    //     template: {
+    //         outputs: [
+    //             {
+    //                 simpleImage: {
+    //                     imageUrl: PosterURL,
+    //                     altText: '',
+    //                 },
+    //             },
+    //         ],
+    //     },
+    // };
+    const callbackResponse = {
         "version": "2.0",
         "template": {
             "outputs": [
                 {
                     "textCard": {
                         "title": "답변이 도착했어요",
-                        "description": "아래 버튼을 눌러 확인해주세요",
+                        // "description": "아래 버튼을 눌러 확인해주세요",
                         "buttons": [
                             {
                                 "action": "webLink",
                                 "label": "답변 확인하기",
                                 "webLinkUrl": PosterURL,
                             },
-                        ]
-                    }
-                }
-            ]
-        }
+                        ],
+                    },
+                },
+            ],
+        },
     };
 
     await fetch(URL, {
@@ -302,6 +301,15 @@ app.post('/kakao/callback-response/poster', async (req, res) => {
     res.status(200).json({ message: 'success' });
     return;
 });
+
+app.get('/render/poster', async (req, res) => {
+    const c: string = req.query.c as string;
+    const image = await generatePosterImage(c);
+    res.writeHead(200, { 'Content-Type': 'image/png' });
+    res.end(image, 'binary');
+
+});
+
 
 app.listen(port, () => {
     console.log(`KakaoTalk chatbot server is running on port ${port}`);
