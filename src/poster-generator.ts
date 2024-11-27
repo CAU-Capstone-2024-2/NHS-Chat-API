@@ -11,7 +11,7 @@ const generatePosterImage = async (encodedParams: string) => {
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
         defaultViewport: {
             width: 375,
-            height: 375,
+            height: 500,
             deviceScaleFactor: 3
         }
     });
@@ -30,13 +30,13 @@ const generatePosterImage = async (encodedParams: string) => {
         await page.goto(htmlPath);
 
         // console.log('Waiting for poster container...');
-        await page.waitForSelector('.poster__container', { timeout: 5000 });
+        await page.waitForSelector('body', { timeout: 5000 });
 
         // console.log('Taking screenshot...');
-        const element = await page.$('.poster__container');
+        const element = await page.$('body');
         const screenshot = await element?.screenshot({
             type: 'jpeg',
-            quality: 90
+            quality: 100
         });
 
         return screenshot;

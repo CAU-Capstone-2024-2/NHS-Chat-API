@@ -80,7 +80,7 @@ app.post('/kakao/callback-request', async (req, res) => {
     console.log(`${SessionId} | kakao/callback-request | timestamp: ${liveUsers[UID]}`);
     console.log(`${SessionId} | kakao/callback-request | utterance: ${Utterance}${('q' in clientExtra) ? ` (${clientExtra.q})` : ''}`);
 
-    const ModelURL = 'http://100.99.151.44:1500/api/ask';
+    const ModelURL = 'http://3.37.186.94:1500/api/ask';
     const ModelQuery = {
         sessionId: SessionId,
         uid: UID,
@@ -186,6 +186,11 @@ app.post('/kakao/callback-response/list-card', async (req, res) => {
         "version": "2.0",
         "template": {
             "outputs": [
+                {
+                    simpleText: {
+                        text: '아래 질문지 중 하나를 선택해주세요',
+                    },
+                },
                 {
                     "listCard": {
                         "header": {

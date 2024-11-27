@@ -58,14 +58,14 @@
         }
 
         .poster__qna {
-            width: calc(315 * var(--dpx));
+            width: calc(335 * var(--dpx));
             height: 100%;
             background-color: #fff;
             /* display: flex;
             justify-content: center;
             align-items: center; */
             /* margin: calc(20 * var(--dpx)); */
-            margin: calc(30 * var(--dpx));
+            margin: calc(20 * var(--dpx));
             margin-bottom: 0px;
             box-sizing: border-box;
             /* border: #1D1D1D solid calc(2 * var(--dpx));
@@ -102,12 +102,12 @@
         } */
 
         .poster__qna_q {
-            width: calc(270 * var(--dpx));
+            width: calc(260 * var(--dpx));
             /* height: calc(60 * var(--dpx)); */
             margin: 0px 0px 0px 0px;
             padding: 0px;
             font-size: calc(20 * var(--dpx));
-            font-weight: 600;
+            font-weight: 700;
             color: #1D1D1D;
             line-height: 120%;
             text-align: left;
@@ -126,21 +126,27 @@
             color: #000000;
             line-height: 140%;
             text-align: justify;
-            overflow: hidden;
+            overflow: scroll;
+        }
+
+        .poster__qna_a--magnified {
+            font-size: calc(28 * var(--dpx));
+            pointer-events: auto;
         }
 
         .poster__disclaimer {
             /* position:
             bottom: 0;
             left: 0; */
-            width: calc(315 * var(--dpx));
+            width: calc(335 * var(--dpx));
             height: calc(30 * var(--dpx));
             padding: calc(7 * var(--dpx));
             box-sizing: border-box;
-            margin: 0px calc(30 * var(--dpx));
+            margin: 0px calc(20 * var(--dpx));
             font-size: calc(7 * var(--dpx));
             line-height: 120%;
             color: #666666;
+            background-color: #fff;
             text-align: center;
             vertical-align: center;
         }
@@ -178,6 +184,10 @@
             text-align: center;
             border-radius: 8px;
             pointer-events: auto;
+        }
+
+        .button--selected {
+            background-color: #0071E3;
         }
 
         .button--save {
@@ -231,7 +241,7 @@
     <div class="button__container">
         <div class="button__container--inline">
             <div class="button--small" onclick="tts();">읽어주기</div>
-            <div class="button--small" onclick="">큰 글씨</div>
+            <div id="btn_magnify" class="button--small" onclick="magnify();">큰 글씨</div>
         </div>
         <div class="button--save" onclick="saveAsImage();">사진으로 저장하기</div>
     </div>
@@ -274,10 +284,29 @@
             console.log(speechSynthesis.getVoices().filter(e => e.lang === 'ko-KR'))
             console.log(utterance.voice);
             speechSynthesis.speak(utterance);
+        };
+
+        const magnify = () => {
+            if (localStorage.getItem('magnified')) {
+                localStorage.removeItem('magnified');
+            } else {
+                localStorage.setItem('magnified', 'true');
+            }
+            document.getElementById('btn_magnify').classList.toggle('button--selected');
+            document.getElementById('poster__qna_a').classList.toggle('poster__qna_a--magnified');
+
+        };
+        const preset = localStorage.getItem('magnified') != null;
+        if (preset) {
+            localStorage.removeItem('magnified');
+            magnify();
         }
 
         const saveAsImage = () => {
-            console.log('!')
+            localStorage.removeItem('magnified');
+            document.getElementById('btn_magnify').classList.remove('button--selected');
+            document.getElementById('poster__qna_a').classList.remove('poster__qna_a--magnified');
+
             domtoimage.toJpeg(poster, {
                 width: poster.clientWidth * 4,
                 height: poster.clientHeight * 4,
