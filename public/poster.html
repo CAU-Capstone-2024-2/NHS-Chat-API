@@ -117,7 +117,7 @@
 
         .poster__qna_a {
             width: 100%;
-            max-height: calc(370 * var(--dpx));
+            max-height: calc(320 * var(--dpx));
             margin: 0px;
             padding: 0px calc(15 * var(--dpx));
             box-sizing: border-box;
@@ -126,6 +126,7 @@
             color: #000000;
             line-height: 140%;
             text-align: justify;
+            pointer-events: auto;
             overflow: scroll;
         }
 
@@ -139,12 +140,14 @@
             bottom: 0;
             left: 0; */
             width: calc(335 * var(--dpx));
-            height: calc(30 * var(--dpx));
+            /* height: calc(30 * var(--dpx)); */
             padding: calc(7 * var(--dpx));
             box-sizing: border-box;
             margin: 0px calc(20 * var(--dpx));
-            font-size: calc(7 * var(--dpx));
-            line-height: 120%;
+            font-size: calc(11 * var(--dpx));
+            font-weight: 400;
+            line-height: 100%;
+            letter-spacing: -0.55px;
             color: #666666;
             background-color: #fff;
             text-align: center;
@@ -234,13 +237,14 @@
             <!-- </div> -->
         </div>
         <p class="poster__disclaimer">
-            국민건강비서 서비스가 제공하는 정보는 국민건강정보포털의 내용을 기반으로 인공지능이 생성한 내용이므로<br>
-            일부 부정확한 표현이 포함되어 있을 수 있습니다. 의약품 및 질병과 관련한 내용은 반드시 의사와 상담하십시오.
+            국민건강비서 서비스가 제공하는 정보는 국민건강정보포털을 기반으로<br>
+            인공지능이 생성한 내용이므로 부정확한 표현이 포함되어 있을 수 있습니다.<br>
+            의약품 및 질병과 관련한 내용은 반드시 의사와 상담하십시오.
         </p>
     </div>
     <div class="button__container">
         <div class="button__container--inline">
-            <div class="button--small" onclick="tts();">읽어주기</div>
+            <div id="btn_tts" class="button--small" onclick="tts();">읽어주기</div>
             <div id="btn_magnify" class="button--small" onclick="magnify();">큰 글씨</div>
         </div>
         <div class="button--save" onclick="saveAsImage();">사진으로 저장하기</div>
@@ -265,15 +269,19 @@
 
         if (urlParams.type === 'qna__square_single') {
             const Q = (urlParams.q);
-            const A = (urlParams.a);
+            const A = (urlParams.a.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replaceAll('\n', '<br>'));
             document.getElementById('poster__qna_q').innerText = Q;
-            document.getElementById('poster__qna_a').innerText = A;
+            document.getElementById('poster__qna_a').innerHTML = A;
         }
 
         if (window.navigator.userAgent.includes('KAKAOTALK')) {
 
         } else {
             document.querySelector('.indicator').style.display = 'none';
+        }
+
+        if (!SpeechSynthesisUtterance) {
+            btn_tts.style.display = 'none';
         }
 
         const tts = () => {

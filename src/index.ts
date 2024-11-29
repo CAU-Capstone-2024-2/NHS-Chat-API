@@ -86,6 +86,7 @@ app.post('/kakao/callback-request', async (req, res) => {
         uid: UID,
         question: ('q' in clientExtra) ? clientExtra.q : Utterance,
         is_from_list: 'session' in clientExtra,
+        isAcute: 'isAcute' in clientExtra && clientExtra.isAcute,
         q_not_found: false,
     };
 
@@ -160,8 +161,10 @@ app.post('/kakao/callback-response/list-card', async (req, res) => {
     // sessionId: string
     // originalQuestion: string
     // question: string[]
+    // isAcute: string
     const SessionId: string = req.body.sessionId;
     const originalQuestion: string = req.body.originalQuestion;
+    const isAcute: boolean = req.body.isAcute as boolean;
     const Answer: string[] = safeJSONParser(req.body.question.replaceAll("\"", "\\\""));
     if (!(SessionId in sessions)) {
         return;
@@ -172,16 +175,28 @@ app.post('/kakao/callback-response/list-card', async (req, res) => {
     delete liveUsers[sessions[SessionId].uid];
     delete sessions[SessionId];
 
-    let listItems: Array<any> = Answer.map((v: string) => {
+    const listItems: Array<any> = Answer.map((v: string) => {
         return {
             "title": v,
             "action": "message",
             "messageText": v,
             "extra": {
+                "isAcute": isAcute,
                 "session": SessionId
             }
         };
     });
+    const buttons: Array<any> = originalQuestion ? [
+        {
+            "label": "찾는 내용이 없어요",
+            "action": "message",
+            "messageText": "찾는 내용이 없어요",
+            "extra": {
+                "q": originalQuestion,
+                "session": SessionId
+            }
+        }
+    ] : [];
     const callbackResponse = {
         "version": "2.0",
         "template": {
@@ -197,17 +212,7 @@ app.post('/kakao/callback-response/list-card', async (req, res) => {
                             "title": "아래 질문지 중 하나를 선택해주세요"
                         },
                         "items": listItems,
-                        "buttons": [
-                            {
-                                "label": "찾는 내용이 없어요",
-                                "action": "message",
-                                "messageText": "찾는 내용이 없어요",
-                                "extra": {
-                                    "q": originalQuestion,
-                                    "session": SessionId
-                                }
-                            }
-                        ]
+                        "buttons": buttons,
                     }
                 }
             ]
@@ -245,8 +250,7 @@ app.post('/kakao/callback-response/poster', async (req, res) => {
     delete liveUsers[sessions[SessionId].uid];
     delete sessions[SessionId];
 
-    // console.log(req.body.answer)
-    const Answer = safeJSONParser(req.body.answer);
+    const Answer = JSON.parse(req.body.answer);
     const PosterType: string = Answer.template_type || 'qna__square_single';
     const Q: string = Answer.content.question;
     const A: string = Answer.content.answer;
@@ -285,6 +289,59 @@ app.post('/kakao/callback-response/poster', async (req, res) => {
                                 "action": "webLink",
                                 "label": "답변 확인하기",
                                 "webLinkUrl": PosterURL,
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    };
+
+    await fetch(URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(callbackResponse),
+    }).then((res) => res.json()).then((data) => {
+        console.log(`${SessionId} | kakao/callback-response/poster | kakao response: ${data.status}`);
+    });
+
+    res.status(200).json({ message: 'success' });
+    return;
+});
+app.post('/kakao/callback-response/acute', async (req, res) => {
+    // sessionId: string
+    // answer: {
+    //     template_type: string
+    //     content: {
+    //         answer: string
+    //     }
+    // }
+    const SessionId: string = req.body.sessionId;
+    if (!(SessionId in sessions)) {
+        return;
+    }
+    const URL: string = sessions[SessionId].callbackUrl;
+
+    delete liveUsers[sessions[SessionId].uid];
+    delete sessions[SessionId];
+
+    // console.log(req.body.answer)
+    const Answer = req.body.answer;
+    const callbackResponse = {
+        "version": "2.0",
+        "template": {
+            "outputs": [
+                {
+                    "textCard": {
+                        "title": "답변이 도착했어요",
+                        "description": "급성 질병에 관한 내용이 포함된 질문입니다. 아래 링크를 확인해주세요.",
+                        "buttons": [
+                            {
+                                "action": "webLink",
+                                "label": "진단 및 검사 방법",
+                                "webLinkUrl": Answer,
                             },
                         ],
                     },
