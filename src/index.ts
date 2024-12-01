@@ -254,7 +254,8 @@ app.post('/kakao/callback-response/poster', async (req, res) => {
     const PosterType: string = Answer.template_type || 'qna__square_single';
     const Q: string = Answer.content.question;
     const A: string = Answer.content.answer;
-    const metadata: string = `type=${PosterType}&q=${encodeURI(Q)}&a=${encodeURI(A)}`;
+    const key: string = Answer.tts_key;
+    const metadata: string = `type=${PosterType}&q=${encodeURI(Q)}&a=${encodeURI(A)}&k=${key}`;
     // console.log(Answer.content)
 
     // const PosterURL: string = `https://nhs.rocknroll17.com/render/poster?c=${btoa(metadata)}`;

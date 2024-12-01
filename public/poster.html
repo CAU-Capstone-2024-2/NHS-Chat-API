@@ -274,24 +274,42 @@
             document.getElementById('poster__qna_a').innerHTML = A;
         }
 
-        if (window.navigator.userAgent.includes('KAKAOTALK')) {
-
-        } else {
+        if (!navigator.userAgent.includes('KAKAOTALK')) {
             document.querySelector('.indicator').style.display = 'none';
         }
 
-        if (!SpeechSynthesisUtterance) {
-            btn_tts.style.display = 'none';
-        }
-
+        const audioElement = document.createElement('audio');
+        audioElement.style.display = 'none';
+        document.body.appendChild(audioElement);
         const tts = () => {
-            speechSynthesis.cancel();
-            let utterance = new SpeechSynthesisUtterance(urlParams.a);
-            utterance.lang = 'ko-KR';
-            utterance.voice = speechSynthesis.getVoices().filter(e => e.lang === 'ko-KR')[9];
-            console.log(speechSynthesis.getVoices().filter(e => e.lang === 'ko-KR'))
-            console.log(utterance.voice);
-            speechSynthesis.speak(utterance);
+            if ((navigator.userAgent.includes("Android") && navigator.userAgent.includes("KAKAOTALK")) || !SpeechSynthesisUtterance) {
+                if (audioElement.src) {
+                    audioElement.play();
+                    return;
+                }
+                fetch('https://form.rocknroll17.com/tts/read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        key: urlParams.k,
+                        string: urlParams.a,
+                    }),
+                }).then(res => res.blob()).then(blob => {
+                    const audioURL = URL.createObjectURL(blob);
+                    audioElement.src = audioURL;
+                    audioElement.play();
+                });
+            } else {
+                speechSynthesis.cancel();
+                let utterance = new SpeechSynthesisUtterance(urlParams.a.replaceAll('**', ''));
+                utterance.lang = 'ko-KR';
+                utterance.voice = speechSynthesis.getVoices().filter(e => e.lang === 'ko-KR')[9];
+                console.log(speechSynthesis.getVoices().filter(e => e.lang === 'ko-KR'))
+                console.log(utterance.voice);
+                speechSynthesis.speak(utterance);
+            }
         };
 
         const magnify = () => {
