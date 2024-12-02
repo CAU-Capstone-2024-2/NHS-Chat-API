@@ -255,7 +255,8 @@ app.post('/kakao/callback-response/poster', async (req, res) => {
     const Q: string = Answer.content.question;
     const A: string = Answer.content.answer;
     const key: string = Answer.tts_key;
-    const metadata: string = `type=${PosterType}&q=${encodeURI(Q)}&a=${encodeURI(A)}&k=${key}`;
+    const definitions = Answer.content.definitions;
+    const metadata: string = `type=${PosterType}&q=${encodeURI(Q)}&a=${encodeURI(A)}&k=${encodeURI(key)}&d=${encodeURI(JSON.stringify(definitions))}`;
     // console.log(Answer.content)
 
     // const PosterURL: string = `https://nhs.rocknroll17.com/render/poster?c=${btoa(metadata)}`;
@@ -358,7 +359,7 @@ app.post('/kakao/callback-response/acute', async (req, res) => {
         },
         body: JSON.stringify(callbackResponse),
     }).then((res) => res.json()).then((data) => {
-        console.log(`${SessionId} | kakao/callback-response/poster | kakao response: ${data.status}`);
+        console.log(`${SessionId} | kakao/callback-response/acute | kakao response: ${data.status}`);
     });
 
     res.status(200).json({ message: 'success' });

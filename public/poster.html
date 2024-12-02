@@ -135,6 +135,10 @@
             pointer-events: auto;
         }
 
+        .poster__qna_a>span {
+            text-decoration: underline;
+        }
+
         .poster__disclaimer {
             /* position:
             bottom: 0;
@@ -252,6 +256,8 @@
 
 
     <script src="https://unpkg.com/dom-to-image-more@3.5.0/dist/dom-to-image-more.min.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
     <script>
         const getUrlParams = (s) => {
             const params = {};
@@ -269,9 +275,14 @@
 
         if (urlParams.type === 'qna__square_single') {
             const Q = (urlParams.q);
-            const A = (urlParams.a.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replaceAll('\n', '<br>'));
+            let A = (urlParams.a.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replaceAll('\n', '<br>'));
+            const definitions = JSON.parse(urlParams.d);
+            definitions.forEach((v) => {
+                A = A.replace(v.word, `<span data-tippy-content="${v.definition}">${v.word}</span>`);
+            });
             document.getElementById('poster__qna_q').innerText = Q;
             document.getElementById('poster__qna_a').innerHTML = A;
+            tippy('[data-tippy-content]');
         }
 
         if (!navigator.userAgent.includes('KAKAOTALK')) {
