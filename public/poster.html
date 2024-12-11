@@ -19,7 +19,6 @@
             padding: 0px;
             display: flex;
             flex-direction: column;
-            /* gap: 20px; */
             justify-content: space-between;
             align-items: center;
             background-color: #D9D9D9;
@@ -33,12 +32,9 @@
         .indicator {
             width: var(--vw);
             box-sizing: border-box;
-            /* position: fixed; */
             display: flex;
             justify-content: space-between;
             padding: 0px 26px 0px 22px;
-            /* top: 0px;
-            left: 0px; */
         }
 
 
@@ -61,15 +57,9 @@
             width: calc(335 * var(--dpx));
             height: 100%;
             background-color: #fff;
-            /* display: flex;
-            justify-content: center;
-            align-items: center; */
-            /* margin: calc(20 * var(--dpx)); */
             margin: calc(20 * var(--dpx));
             margin-bottom: 0px;
             box-sizing: border-box;
-            /* border: #1D1D1D solid calc(2 * var(--dpx));
-            border-radius: 100px calc(12 * var(--dpx)) calc(12 * var(--dpx)) 100px; */
         }
 
         .poster__qna_q_container {
@@ -84,22 +74,7 @@
             border: #1D1D1D solid calc(2 * var(--dpx));
             background-color: #FFE6E5;
             transform: translate(-10px, -10px);
-            /* border-radius: 100px calc(12 * var(--dpx)) calc(12 * var(--dpx)) 100px; */
         }
-
-        /* .poster__qna_q_icon {
-            width: calc(52 * var(--dpx));
-            height: calc(52 * var(--dpx));
-            margin: calc(4 * var(--dpx));
-            background-color: #1D1D1D;
-            color: #FFFFFF;
-            font-size: calc(36 * var(--dpx));
-            font-weight: 700;
-            line-height: calc(52 * var(--dpx));
-            text-align: center;
-            vertical-align: middle;
-            border-radius: 100px;
-        } */
 
         .poster__qna_q {
             width: calc(260 * var(--dpx));
@@ -206,8 +181,11 @@
             font-weight: 700;
             line-height: 49px;
             text-align: center;
-            /* border-radius: 8px; */
             pointer-events: auto;
+        }
+
+        .tippy-box {
+            font-size: 24px;
         }
     </style>
 </head>
@@ -233,12 +211,9 @@
     <div id="poster" class="poster__container">
         <div class="poster__qna">
             <div class="poster__qna_q_container">
-                <!-- <div class="poster__qna_q_icon">Q</div> -->
                 <div class="poster__qna_q" id="poster__qna_q"></div>
             </div>
-            <!-- <div class="poster__qna_a_container"> -->
             <p class="poster__qna_a" id="poster__qna_a"></p>
-            <!-- </div> -->
         </div>
         <p class="poster__disclaimer">
             국민건강비서 서비스가 제공하는 정보는 국민건강정보포털을 기반으로<br>
@@ -276,7 +251,7 @@
         if (urlParams.type === 'qna__square_single') {
             const Q = (urlParams.q);
             let A = (urlParams.a.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replaceAll('\n', '<br>'));
-            const definitions = JSON.parse(urlParams.d);
+            const definitions = JSON.parse(urlParams?.d || '[]');
             definitions.forEach((v) => {
                 A = A.replace(v.word, `<span data-tippy-content="${v.definition}">${v.word}</span>`);
             });

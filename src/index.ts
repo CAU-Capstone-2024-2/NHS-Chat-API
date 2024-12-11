@@ -3,17 +3,13 @@ import bodyParser from 'body-parser';
 import { v4 } from 'uuid';
 import path from 'path';
 import generatePosterImage from './poster-generator'
-// import nodeHtmlToImage from 'node-html-to-image';
-// import puppeteer from 'puppeteer';
 
 const app = express();
 const port = 5000;
 
 interface Session {
-    // sessionId: string,
     callbackUrl: string,
     uid: string,
-    // timestamp: number,
 }
 interface SessionStorage {
     [id: string]: Session,
@@ -113,9 +109,6 @@ app.post('/kakao/callback-request', async (req, res) => {
     res.end();
     return;
 });
-// app.post('/kakao/callback-request/init', async (req, res) => {
-
-// });
 
 
 /* Sending Message (AI -> chat) */
@@ -172,6 +165,7 @@ app.post('/kakao/callback-response/list-card', async (req, res) => {
     const URL: string = sessions[SessionId].callbackUrl;
 
     console.log(`${SessionId} | kakao/callback-response/list-card | answer: ${Answer}`);
+    const time = liveUsers[sessions[SessionId].uid];
     delete liveUsers[sessions[SessionId].uid];
     delete sessions[SessionId];
 
@@ -227,6 +221,8 @@ app.post('/kakao/callback-response/list-card', async (req, res) => {
         body: JSON.stringify(callbackResponse),
     }).then((res) => res.json()).then((data) => {
         console.log(`${SessionId} | kakao/callback-response/list-card | kakao response: ${data.status}`);
+
+        console.log((new Date().getTime() - time) / 1000 + 's');
     });
 
     res.status(200).json({ message: 'success' });
@@ -257,9 +253,7 @@ app.post('/kakao/callback-response/poster', async (req, res) => {
     const key: string = Answer.tts_key;
     const definitions = Answer.content.definitions;
     const metadata: string = `type=${PosterType}&q=${encodeURI(Q)}&a=${encodeURI(A)}&k=${encodeURI(key)}&d=${encodeURI(JSON.stringify(definitions))}`;
-    // console.log(Answer.content)
 
-    // const PosterURL: string = `https://nhs.rocknroll17.com/render/poster?c=${btoa(metadata)}`;
     const PosterURL: string = `https://nhs.rocknroll17.com/poster?c=${btoa(metadata)}`;
     console.log(`${SessionId} | kakao/callback-response/poster | type: ${PosterType}`);
     console.log(`${SessionId} | kakao/callback-response/poster |    Q: ${Q}`);
@@ -329,7 +323,6 @@ app.post('/kakao/callback-response/acute', async (req, res) => {
     delete liveUsers[sessions[SessionId].uid];
     delete sessions[SessionId];
 
-    // console.log(req.body.answer)
     const Answer = req.body.answer;
     const callbackResponse = {
         "version": "2.0",
